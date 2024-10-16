@@ -1,0 +1,32 @@
+input,
+select,
+textarea {
+    border: 1px solid rgba(86, 86, 86);
+    padding: 8px 10px;
+    width: 100%;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    border: 1px solid rgba(0, 0, 0);
+    outline: none;
+}
+
+.primary-contained-btn {
+    background-color: var(--primary);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.primary-outlined-btn {
+    background-color: white;
+    color: var(--primary);
+    border: 2px solid var(--primary);
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+}
