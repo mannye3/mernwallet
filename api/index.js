@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser';
 import connectDB from './db/connectDB.js';
 import authRouter from './routes/auth.route.js';
 import adminRoutes from './routes/adminRoutes.js';
+import transactionRoutes from './routes/transactionRoutes.js';
 
 dotenv.config(); // Load environment variables
 
@@ -24,6 +25,9 @@ app.use(cookieParser()); // Parse cookies
 // Routes setup
 app.use('/api/auth', authRouter);
 app.use('/api/admin', adminRoutes);
+app.use('/api/transaction', transactionRoutes);
+
+// http://localhost:5000/api/transaction/verify-account
 
 // Start the server
 const PORT = process.env.PORT || 5000; // Default to 5000 if PORT is not set

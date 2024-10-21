@@ -34,3 +34,22 @@
     text-decoration: underline;
     cursor: pointer;
 }
+
+
+.uppercase {
+    text-transform: uppercase;
+}
+
+
+h1 {
+    padding-bottom: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+
+i {
+    font-style: italic;
+    cursor: pointer;
+    font-size: 20px;
+
+}

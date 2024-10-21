@@ -1,6 +1,6 @@
 :root {
-    --primary: #004835;
-    --secondary: #3b2600;
+    --primary: #033327fc;
+    --secondary: #eea112;
 }
 
 
@@ -26,4 +26,19 @@
 
 .text-black {
     color: #000 !important;
+}
+
+.success-bg {
+    background-color: #4caf50 !important;
+    color: white !important;
+    padding: 10px !important;
+    border-radius: 5px !important;
+}
+
+
+.error-bg {
+    background-color: #f44336 !important;
+    color: white !important;
+    padding: 10px !important;
+    border-radius: 5px !important;
 }

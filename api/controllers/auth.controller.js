@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import crypto from "crypto"
 import { generateTokenAndSetCookie } from "../utils/generateTokenAndSetCookie.js";
 import { sendVerificationEmail, sendWelcomeEmail, sendResetPasswordEmail, sendResetSuccessEmail } from "../utils/emailService.js";
+import Transaction from "../models/transactionModel.js";
 
 
 export const register = async (req, res) => {
@@ -195,15 +196,46 @@ export const resetPassword = async (req, res) => {
 export const checkAuth = async (req, res) => {
   try {
     // Fetch the user based on the userId from the token
-    const user = await User.findById(req.userId).select("-password");
+    const user = await User.findById(req.body.userId).select("-password");
+    //console.log(user)
 
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
     }
 
+     //const transactions = await Transaction.find({ $or: [{sender: req.body.userId}, {receiver: req.body.userId}] })
+    
+
     res.status(200).json({
       success: true,
       user,
+      //data: transactions,
+      token: req.token,
+    });
+  } catch (error) {
+    console.error("Error in CheckAuth:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
+
+export const checkAuth2 = async (req, res) => {
+  try {
+    // Fetch the user based on the userId from the token
+    const user = await User.findById(req.body.userId).select("-password");
+    //console.log(user)
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+     const transactions = await Transaction.find({ $or: [{sender: req.body.userId}, {receiver: req.body.userId}] })
+    
+
+    res.status(200).json({
+      success: true,
+      user,
+      data: transactions,
       token: req.token,
     });
   } catch (error) {

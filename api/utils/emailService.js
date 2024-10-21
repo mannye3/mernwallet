@@ -115,3 +115,63 @@ export const sendResetSuccessEmail = async (email) =>
     return false;
   }
   }
+
+
+
+
+
+export const sendEmailNotification = async (senderAccount, receiverAccount, amount) => {
+  // Calculate updated balances
+  const updatedSenderBalance = senderAccount.balance - amount;
+  const updatedReceiverBalance = receiverAccount.balance + amount;
+
+  const senderEmailTemplate = `
+    <div style="font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f4;">
+      <h2 style="color: #4CAF50;">Transfer Successful</h2>
+      <p>Dear ${senderAccount.firstname},</p>
+      <p>You have successfully transferred <strong>$${amount}</strong> to 
+        <strong>${receiverAccount.firstname} ${receiverAccount.lastname}</strong>.</p>
+      <p>Your new balance is <strong>$${updatedSenderBalance}</strong>.</p>
+      <p>Transaction Reference: <em>TX-${Date.now()}</em></p>
+      <p>Thank you for using our service.</p>
+      <footer style="margin-top: 20px; font-size: 12px; color: #777;">
+        This is an automated message. Please do not reply to this email.
+      </footer>
+    </div>
+  `;
+
+  const receiverEmailTemplate = `
+    <div style="font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f4;">
+      <h2 style="color: #4CAF50;">You've Received a Transfer</h2>
+      <p>Dear ${receiverAccount.firstname},</p>
+      <p>You have received <strong>$${amount}</strong> from 
+        <strong>${senderAccount.firstname} ${senderAccount.lastname}</strong>.</p>
+      <p>Your new balance is <strong>$${updatedReceiverBalance}</strong>.</p>
+      <p>Transaction Reference: <em>TX-${Date.now()}</em></p>
+      <p>We hope you enjoy using our service.</p>
+      <footer style="margin-top: 20px; font-size: 12px; color: #777;">
+        This is an automated message. Please do not reply to this email.
+      </footer>
+    </div>
+  `;
+
+  const mailOptions = [
+    {
+      from: process.env.EMAIL_USER,
+      to: senderAccount.email,
+      subject: "Transfer Successful",
+      html: senderEmailTemplate, // Use HTML template
+    },
+    {
+      from: process.env.EMAIL_USER,
+      to: receiverAccount.email,
+      subject: "You've Received a Transfer",
+      html: receiverEmailTemplate, // Use HTML template
+    },
+  ];
+
+  // Send both emails using Promise.all() to send them concurrently
+  await Promise.all(
+    mailOptions.map((mail) => transporter.sendMail(mail))
+  );
+};
