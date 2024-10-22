@@ -4,11 +4,19 @@ import mongoose from 'mongoose';
 import { User } from '../models/user.model.js';
 import Transaction from '../models/transactionModel.js';
 import { sendEmailNotification } from "../utils/emailService.js";
+import Stripe from 'stripe';
+import { v4 as uuidv4 } from 'uuid';
 
 
 
 
- const MAX_RETRIES = 3; 
+const stripe = new Stripe(process.env.STRIPE_KEY);
+const uniqueID = uuidv4();
+const MAX_RETRIES = 3;
+
+
+
+
 export const transfer = async (req, res) => {
   const { sender, receiver, amount } = req.body;
 
@@ -133,3 +141,142 @@ export const verifyAccount = async (req, res) => {
 };
 
 
+
+
+// export const DepositFunds = async (req, res) => {
+//   try {
+//     const { amount, token } = req.body; // Ensure userId is in the request body
+
+//     // Validate input
+//     if (!amount || !token) {
+//       return res.status(400).send({
+//         success: false,
+//         message: 'Missing required fields',
+//       });
+//     }
+
+//     const user = await User.findById(req.body.userId).select("-password");
+//     console.log(user)
+//     // Step 1: Create a customer in Stripe
+//     const customer = await stripe.customers.create({
+//       email: token.email, // Store the email of the customer
+//       source: token.id, // Associate the token with this customer
+//     });
+
+//     // Step 2: Create a charge for the customer
+//     const charge = await stripe.charges.create({
+//       amount: amount * 100, // Amount in cents
+//       currency: 'usd',
+//       customer: customer.id, // Charge the customer
+//       description: 'Deposit to account',
+//     });
+
+//     // Step 3: Save the transaction to the database
+//     if (charge.status === 'succeeded') {
+//       const transaction = new Transaction({
+//         sender: res.body.userId, // Use the userId from the request body
+//         receiver:  res.body.userId, // Deposit made to the same user's account
+//         amount,
+//         status: 'completed', // Change this based on your logic
+//         type: 'deposit', // Use lowercase to match the enum values
+//         reference: `TX-${Date.now()}`, // Generate a unique reference
+//       });
+
+//       await transaction.save(); // Save the transaction record
+
+//       // Update user's balance
+//       await User.findByIdAndUpdate(res.body.userId, {
+//         $inc: { balance: amount }, // Increment the user's balance
+//       });
+
+//       return res.status(200).send({
+//         success: true,
+//         message: 'Deposit successful!',
+//         data: transaction,
+//       });
+//     } else {
+//       return res.status(400).send({
+//         success: false,
+//         message: 'Deposit failed!',
+//         data: charge,
+//       });
+//     }
+//   } catch (error) {
+//     console.error('Error during deposit:', error); // Log the error for debugging
+//     return res.status(500).send({
+//       success: false,
+//       message: 'Deposit failed!',
+//       error: error.message || 'An error occurred', // Send the error message if available
+//     });
+//   }
+// };
+
+
+export const DepositFunds = async (req, res) => {
+  try {
+    // Log the entire request body for debugging
+   
+
+    const { amount, token, userId } = req.body; // Ensure userId is in the request body
+  console.log('Request Body:', userId);
+    // Validate input
+    if (!amount || !token || !userId) { // Check for userId as well
+      return res.status(400).send({
+        success: false,
+        message: 'Missing required fields',
+      });
+    }
+
+    // Step 1: Create a customer in Stripe
+    const customer = await stripe.customers.create({
+      email: token.email, // Store the email of the customer
+      source: token.id, // Associate the token with this customer
+    });
+
+    // Step 2: Create a charge for the customer
+    const charge = await stripe.charges.create({
+      amount: amount * 100, // Amount in cents
+      currency: 'usd',
+      customer: customer.id, // Charge the customer
+      description: 'Deposit to account',
+    });
+
+    // Step 3: Save the transaction to the database
+    if (charge.status === 'succeeded') {
+      const transaction = new Transaction({
+        sender: userId, // Use userId from the request body
+        receiver: userId, // Deposit made to the same user's account
+        amount,
+        status: 'completed', // Change this based on your logic
+        type: 'deposit', // Use lowercase to match the enum values
+        reference: `TX-${Date.now()}`, // Generate a unique reference
+      });
+
+      await transaction.save(); // Save the transaction record
+
+      // Update user's balance
+      await User.findByIdAndUpdate(userId, {
+        $inc: { balance: amount }, // Increment the user's balance
+      });
+
+      return res.status(200).send({
+        success: true,
+        message: 'Deposit successful!',
+        data: transaction,
+      });
+    } else {
+      return res.status(400).send({
+        success: false,
+        message: 'Deposit failed!',
+        data: charge,
+      });
+    }
+  } catch (error) {
+    console.error('Error during deposit:', error); // Log the error for debugging
+    return res.status(500).send({
+      success: false,
+      message: 'Deposit failed!',
+      error: error.message || 'An error occurred', // Send the error message if available
+    });
+  }
+};

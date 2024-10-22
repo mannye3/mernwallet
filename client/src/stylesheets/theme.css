@@ -1,6 +1,7 @@
 :root {
     --primary: #033327fc;
     --secondary: #eea112;
+    --other: #830632;
 }
 
 
@@ -30,6 +31,13 @@
 
 .success-bg {
     background-color: #4caf50 !important;
+    color: white !important;
+    padding: 10px !important;
+    border-radius: 5px !important;
+}
+
+.other-bg {
+    background-color: var(--other) !important;
     color: white !important;
     padding: 10px !important;
     border-radius: 5px !important;

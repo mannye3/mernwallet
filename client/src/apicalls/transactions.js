@@ -50,18 +50,18 @@ export const getTransactions = async () => {
   }
 };
 
-// export const getTransactions = async (payload) => {
-//     try {
-//         const {data} = await axiosInstance.post("http://localhost:5000/api/transaction/all-transactions", payload);
-//         return data;
-//     } catch (error) {
-//         return error.response.data
-//     }
-// }
 
 
 
 
+export const DepositFund = async (payload) => {
+    try {
+        const {data} = await axiosInstance.post("http://localhost:5000/api/transaction/deposit-fund", payload);
+        return data;
+    } catch (error) {
+        return error.response.data
+    }
+}
 
 
 

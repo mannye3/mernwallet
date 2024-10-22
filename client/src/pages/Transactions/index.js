@@ -6,9 +6,13 @@ import { getTransactions } from '../../apicalls/transactions';
 import PageTitle from '../../componets/PageTitle';
 
 import { useSelector } from 'react-redux';
+import DepositModal from './DepositModal';
 
 function Transactions() {
     const [showTransaferModal, setShowTransaferModal] = useState(false);
+    const [showDepositModal, setShowDepositModal] = useState(false);
+
+    
     const [data = [], setData] = React.useState([]); // Ensure data is initialized as an array
     const [loading, setLoading] = useState(false); // State to track loading
     const {user} = useSelector(state => state.users)
@@ -30,7 +34,9 @@ function Transactions() {
         {
             title: "Type",
             dataIndex: "type",
-            render: (text) => text === user._id ? "Deposit" : "Withdrawal",
+            render: (text,record) => {
+                return 	record.sender._id === user._id ? "Debit" : "Credit"
+            } 
         },
         {
   title: "Reference Account",
@@ -82,7 +88,7 @@ function Transactions() {
             <div className='flex justify-between items-center'>
                 <PageTitle title="Transactions" />
                 <div className='flex gap-1'>
-                    <button className='primary-outlined-btn'>Deposit</button>
+                    <button className='primary-outlined-btn'  onClick={() => setShowDepositModal(true)} >Deposit</button>
                     <button className='primary-contained-btn'
                         onClick={() => setShowTransaferModal(true)}
                     >Transfer</button>
@@ -100,7 +106,13 @@ function Transactions() {
             {showTransaferModal && <TranFundModal
                 showTransaferModal={showTransaferModal}
                 setShowTransaferModal={setShowTransaferModal} 
-            />}
+            />} 
+
+
+             {showDepositModal && <DepositModal
+                showDepositModal={showDepositModal}
+                setShowDepositModal={setShowTransaferModal} 
+            />} 
         </div>
     );
 }
