@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 
 import { User } from '../models/user.model.js';
 import Transaction from '../models/transactionModel.js';
-import { sendEmailNotification } from "../utils/emailService.js";
+import { sendEmailNotification, sendDepositEmail} from "../utils/emailService.js";
 import Stripe from 'stripe';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -214,50 +214,68 @@ export const verifyAccount = async (req, res) => {
 
 export const DepositFunds = async (req, res) => {
   try {
-    // Log the entire request body for debugging
-   
+    const { amount, token, userId } = req.body;
 
-    const { amount, token, userId } = req.body; // Ensure userId is in the request body
-  console.log('Request Body:', userId);
-    // Validate input
-    if (!amount || !token || !userId) { // Check for userId as well
+    if (!amount || !token || !userId) {
       return res.status(400).send({
         success: false,
         message: 'Missing required fields',
       });
     }
 
+    // Fetch user details from the database
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).send({
+        success: false,
+        message: 'User not found',
+      });
+    }
+
+    const { firstname, lastname, email, balance } = user;
+
     // Step 1: Create a customer in Stripe
     const customer = await stripe.customers.create({
-      email: token.email, // Store the email of the customer
-      source: token.id, // Associate the token with this customer
+      email: token.email,
+      source: token.id,
     });
 
-    // Step 2: Create a charge for the customer
+    // Step 2: Create a charge
     const charge = await stripe.charges.create({
-      amount: amount * 100, // Amount in cents
+      amount: amount * 100,
       currency: 'usd',
-      customer: customer.id, // Charge the customer
+      customer: customer.id,
       description: 'Deposit to account',
     });
 
-    // Step 3: Save the transaction to the database
+    // Step 3: Save the transaction and update the user's balance
     if (charge.status === 'succeeded') {
       const transaction = new Transaction({
-        sender: userId, // Use userId from the request body
-        receiver: userId, // Deposit made to the same user's account
+        sender: userId,
+        receiver: userId,
         amount,
-        status: 'completed', // Change this based on your logic
-        type: 'deposit', // Use lowercase to match the enum values
-        reference: `TX-${Date.now()}`, // Generate a unique reference
+        status: 'completed',
+        type: 'deposit',
+        reference: `TX-${Date.now()}`,
       });
 
-      await transaction.save(); // Save the transaction record
+      await transaction.save();
 
       // Update user's balance
-      await User.findByIdAndUpdate(userId, {
-        $inc: { balance: amount }, // Increment the user's balance
-      });
+      const updatedUser = await User.findByIdAndUpdate(
+        userId,
+        { $inc: { balance: amount } },
+        { new: true }
+      );
+
+      // Send email notification with personalized name and updated balance
+      await sendDepositEmail(
+        email,
+        amount,
+        updatedUser.balance,
+        firstname,
+        lastname
+      );
 
       return res.status(200).send({
         success: true,
@@ -272,11 +290,11 @@ export const DepositFunds = async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('Error during deposit:', error); // Log the error for debugging
+    console.error('Error during deposit:', error);
     return res.status(500).send({
       success: false,
       message: 'Deposit failed!',
-      error: error.message || 'An error occurred', // Send the error message if available
+      error: error.message || 'An error occurred',
     });
   }
 };

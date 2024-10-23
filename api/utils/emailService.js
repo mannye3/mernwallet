@@ -157,13 +157,13 @@ export const sendEmailNotification = async (senderAccount, receiverAccount, amou
 
   const mailOptions = [
     {
-      from: process.env.EMAIL_USER,
+      from: process.env.EMAIL,
       to: senderAccount.email,
       subject: "Transfer Successful",
       html: senderEmailTemplate, // Use HTML template
     },
     {
-      from: process.env.EMAIL_USER,
+      from: process.env.EMAIL,
       to: receiverAccount.email,
       subject: "You've Received a Transfer",
       html: receiverEmailTemplate, // Use HTML template
@@ -174,4 +174,43 @@ export const sendEmailNotification = async (senderAccount, receiverAccount, amou
   await Promise.all(
     mailOptions.map((mail) => transporter.sendMail(mail))
   );
+};
+
+
+
+// Function to send deposit email with HTML template
+export const sendDepositEmail = async (email, amount, balance, firstname, lastname) => {
+  try {
+    const mailOptions = {
+      from: process.env.EMAIL,
+      to: email,
+      subject: 'Deposit Successful',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd;">
+          <h2 style="color: #4CAF50; text-align: center;">Deposit Confirmation</h2>
+          <p>Dear ${firstname} ${lastname},</p>
+
+          <p>We are pleased to inform you that your recent deposit of <strong>$${amount}</strong> was successful!</p>
+
+          <p>Your updated account balance is: <strong>$${balance}</strong>.</p>
+
+          <div style="margin-top: 20px;">
+            <p>Thank you for choosing our service. If you have any questions, feel free to contact us.</p>
+            <p>Best Regards,</p>
+            <p><strong>Your Company</strong></p>
+          </div>
+
+          <hr style="border: none; border-top: 1px solid #ddd; margin-top: 20px;" />
+          <p style="font-size: 12px; text-align: center; color: #888;">
+            This is an automated message. Please do not reply to this email.
+          </p>
+        </div>
+      `,
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log('Email sent successfully!');
+  } catch (error) {
+    console.error('Failed to send email:', error);
+  }
 };
